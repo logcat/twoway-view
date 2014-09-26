@@ -27,6 +27,7 @@ public class ItemSelectionSupport {
     private final TouchListener mTouchListener;
 
     private ChoiceMode mChoiceMode = ChoiceMode.NONE;
+    private MultiChoiceModeListener mMultiChoiceModeListener;
     private CheckedStates mCheckedStates;
     private CheckedIdStates mCheckedIdStates;
     private int mCheckedCount;
@@ -37,6 +38,10 @@ public class ItemSelectionSupport {
     private static final String STATE_KEY_CHECKED_COUNT = "checkedCount";
 
     private static final int CHECK_POSITION_SEARCH_DISTANCE = 20;
+
+    public interface MultiChoiceModeListener {
+        void onItemCheckedStateChanged(int position, long id, boolean checked);
+    }
 
     private ItemSelectionSupport(RecyclerView recyclerView) {
         mRecyclerView = recyclerView;
@@ -184,6 +189,7 @@ public class ItemSelectionSupport {
                     mCheckedCount--;
                 }
             }
+            notifyMultiChoiceModeListener(position, adapter.getItemId(position), checked);
         } else {
             boolean updateIds = mCheckedIdStates != null && adapter.hasStableIds();
 
@@ -501,6 +507,7 @@ public class ItemSelectionSupport {
                 }
 
                 checkedStateChanged = true;
+                notifyMultiChoiceModeListener(position, adapter.getItemId(position), checked);
             } else if (mChoiceMode == ChoiceMode.SINGLE) {
                 boolean checked = !mCheckedStates.get(position, false);
                 if (checked) {
@@ -530,6 +537,16 @@ public class ItemSelectionSupport {
         @Override
         boolean performItemLongClick(RecyclerView parent, View view, int position, long id) {
             return true;
+        }
+    }
+
+    public void setMultiChoiceModeListener(MultiChoiceModeListener multiChoiceModeListener) {
+        mMultiChoiceModeListener = multiChoiceModeListener;
+    }
+
+    private void notifyMultiChoiceModeListener(int position, long itemId, boolean checked) {
+        if (mMultiChoiceModeListener != null) {
+            mMultiChoiceModeListener.onItemCheckedStateChanged(position, itemId, checked);
         }
     }
 }
